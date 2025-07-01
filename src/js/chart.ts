@@ -5,13 +5,17 @@ const trPrefix = "t_";
 
 export class Chart {
   prefix: string;
+  chartInstance: any; // To store the chart instance
   constructor(prefix: string) {
     this.prefix = prefix;
+    this.chartInstance = null;
   }
+
   async draw(points: any, events: any) {
     let marker = await this.getMarkers(events);
     this.drawEchart(points, marker);
   }
+
   async getMarkers(
     events: { [x: string]: any; hasOwnProperty: (arg0: string) => any },
     type = "xAxis",
@@ -21,7 +25,6 @@ export class Chart {
     for (const key in events) {
       if (events.hasOwnProperty(key)) {
         const element = events[key];
-        let obj = {};
         let distance = Number.parseFloat(element.distance).toFixed(2);
         if (type === "xAxis") {
           obj = {
@@ -45,11 +48,33 @@ export class Chart {
     }
     return markers;
   }
+
+  /**
+   * Returns the chart's current state as a base64 encoded image.
+   * @returns {string|null} Base64 encoded PNG image or null if chart is not initialized.
+   */
+  getChartAsBase64(): string | null {
+    if (this.chartInstance) {
+      return this.chartInstance.getDataURL({
+        type: "png",
+        pixelRatio: 2,
+        backgroundColor: "#fff",
+      });
+    }
+    console.error("Chart instance not available to capture image.");
+    return null;
+  }
+
   /**Apache Echart */
   drawEchart(points: { points: any }, markers: {}[]) {
+    const chartContainer = document.getElementById("chartContainer");
+    if (!chartContainer) {
+      console.error("Chart container element not found.");
+      return;
+    }
     /**@todo fix the typescript error */
     // @ts-expect-error
-    var myChart = echarts.init(document.getElementById("chartContainer"));
+    this.chartInstance = echarts.init(chartContainer);
 
     let option = {
       animation: false,
@@ -120,14 +145,6 @@ export class Chart {
             x: 0,
             y: 1,
           },
-          // markPoint: {
-          //   symbol: "diamond",
-          //   symbolSize: 10,
-          //   label: {
-          //     position: "top"
-          //   },
-          //   data: markers
-          // },
           markLine: {
             silent: false,
             symbol: "none",
@@ -136,10 +153,10 @@ export class Chart {
         },
       ],
     };
-    myChart.setOption(option);
+    this.chartInstance.setOption(option);
 
     /** Event Handling */
-    myChart.on("mouseover", function (params: { name: string }) {
+    this.chartInstance.on("mouseover", function (params: { name: string }) {
       let arrIndex = parseInt(params.name);
       let id = trPrefix + arrIndex;
       highlight_row(id);
@@ -154,14 +171,17 @@ export class Chart {
 function highlight_row(className: string) {
   unHighlightAllRoWs();
   var row = document.getElementsByClassName(className);
-  if (row) {
+  if (row && row.length > 0) {
     row[0].className += " selected";
   }
 }
-function unHighlightAllRoWs(idName = "event-table") {
+function unHighlightAllRoWs(idName = "events-table") {
   var table = document.getElementById(idName);
-  var rows = table?.getElementsByTagName("tr");
-  for (var row = 0; row < rows!.length; row++) {
-    rows![row].classList.remove("selected");
+  if (table) {
+    var rows = table.getElementsByTagName("tr");
+    for (var i = 0; i < rows.length; i++) {
+      rows[i].classList.remove("selected");
+    }
   }
 }
+var obj = {};
