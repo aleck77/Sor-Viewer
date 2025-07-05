@@ -60,7 +60,6 @@ export class Gui {
             <label for="send-chart-checkbox" style="margin-right: 5px;">Include Chart Image (PNG)</label>
             <input type="checkbox" id="send-chart-checkbox">
           </div>
-          <button id="send-json-btn" style="padding: 8px 16px; font-size: 16px; cursor: pointer;">Send JSON</button>
           <button id="preview-report-btn" style="padding: 8px 16px; font-size: 16px; cursor: pointer; margin-left: 10px;">Preview Report</button>
         </div>
       </div>
@@ -73,13 +72,13 @@ export class Gui {
     [x: string]: any;
     hasOwnProperty: (arg0: string) => any;
   }) {
-    let html = `<ul>`;
+    let html = `<ul class="prop-list">`;
     for (const key in data) {
       if (data.hasOwnProperty(key)) {
         const element = data[key];
         // Add checkbox only for final values, not for nested objects (lists/sub-lists)
         if (typeof element === "object" && element !== null) {
-          html += `<li><b>${key}: </b>${await this.createPropertyList(
+          html += `<li><span class="toggle-btn"></span><b>${key}: </b>${await this.createPropertyList(
             element
           )}</li>`;
         } else {
@@ -157,10 +156,6 @@ export class Gui {
     let html = "";
     for (const key in data) {
       if (data.hasOwnProperty(key)) {
-        // Skip 'number' column for events-table headers if it's the events table
-        if (isEventsTable && key === "number") {
-          continue;
-        }
         const element = data[key];
         html += `<td>${element}</td>`;
       }
@@ -175,6 +170,7 @@ export class Gui {
     for (const key in data) {
       // Skip 'number' column for events-table if it's the events table
       if (tableId === "events-table" && key === "number") {
+        html += `<th>${key}</th>`;
         continue;
       }
       html += `<th><input type="checkbox" class="header-checkbox" data-key="${key}" style="margin-right: 5px;">${key}</th>`;
@@ -188,6 +184,7 @@ export class Gui {
     this.setupRowCheckboxes();
     this.setupActionButtons();
     this.setupPropCheckboxes();
+    this.setupToggleButtons();
   }
 
   setupSelectAllCheckboxes() {
@@ -242,6 +239,20 @@ export class Gui {
 
   setupPropCheckboxes() {
     // No specific global behavior for prop checkboxes, they are gathered by _gatherPayload
+  }
+
+  setupToggleButtons() {
+    const toggleButtons = document.querySelectorAll(".toggle-btn");
+    toggleButtons.forEach(button => {
+      button.addEventListener('click', (event) => {
+        const target = event.target as HTMLElement;
+        const sublist = target.nextElementSibling?.nextElementSibling as HTMLUListElement;
+        if (sublist && sublist.tagName === 'UL') {
+          sublist.classList.toggle('expanded');
+          target.classList.toggle('open');
+        }
+      });
+    });
   }
 
   /** Gathers all selected data from the UI */
@@ -421,24 +432,22 @@ ${JSON.stringify(payload, null, 2)}`);
 
     const dataToSend: any[] = [];
     // Get ONLY selected rows (where row-checkbox is checked)
-    const selectedRows = table.querySelectorAll<HTMLTableRowElement>("tbody tr .row-checkbox:checked");
+    const selectedRows = table.querySelectorAll<HTMLTableRowElement>("tbody tr.selected");
     
-    selectedRows.forEach((checkbox) => {
-        const row = checkbox.closest('tr');
-        if (row) {
-            const rowData: { [key: string]: string } = {};
-            const cells = row.getElementsByTagName("td");
-            
-            // Iterate through selected headers and get data from corresponding cells
-            // Note: cell index needs to be adjusted by +1 because of the new row-checkbox column
-            for (const header of selectedHeaders) {
-                // The actual cell index will be header.index + 1 because the first cell is for the row checkbox
-                const actualCellIndex = header.index; 
-                if (cells[actualCellIndex]) {
-                    rowData[header.key] = cells[actualCellIndex].innerText;
-                }
+    selectedRows.forEach((row) => {
+        const rowData: { [key: string]: string } = {};
+        const cells = row.getElementsByTagName("td");
+        
+        // Iterate through selected headers and get data from corresponding cells
+        // Note: cell index needs to be adjusted by +1 because of the new row-checkbox column
+        for (const header of selectedHeaders) {
+            const actualCellIndex = header.index;
+            if (cells[actualCellIndex]) {
+                rowData[header.key] = cells[actualCellIndex].innerText;
             }
-            dataToSend.push(rowData);
+        }
+        if (Object.keys(rowData).length > 0) {
+          dataToSend.push(rowData);
         }
     });
     return dataToSend;
@@ -454,8 +463,9 @@ ${JSON.stringify(payload, null, 2)}`);
       <style>
         body { font-family: sans-serif; margin: 20px; }
         h1, h2 { color: #333; text-align: center; }
-        .report-data { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 20px; }
-        .data-item { flex: 0 0 calc(50% - 20px); display: flex; align-items: baseline; gap: 5px; }
+        .report-container { display: flex; flex-direction: column; align-items: center; }
+        .report-data { column-count: 2; column-gap: 20px; margin-top: 20px; }
+        .data-item { display: flex; align-items: baseline; gap: 5px; break-inside: avoid-column; margin-bottom: 10px; }
         .data-key { font-weight: bold; margin-right: 5px; }
         .data-value { flex-grow: 1; border-bottom: 1px dashed #ccc; padding-bottom: 2px; }
         img { max-width: 100%; height: auto; display: block; margin: 0 auto 20px auto; border: 1px solid #ddd; }
@@ -472,7 +482,8 @@ ${JSON.stringify(payload, null, 2)}`);
     </head>
     <body>
       <button onclick="window.print()" class="print-btn">Save PDF</button>
-      <h1>Report: ${data.sourceFile || "N/A"}</h1>
+      <div class="report-container">
+        <h1>Report: ${data.sourceFile || "N/A"}</h1>
     `;
 
     if (data.chartImage) {
@@ -506,6 +517,7 @@ ${JSON.stringify(payload, null, 2)}`);
     }
 
     html += `</div>`; // Close report-data div
+    html += `</div>`; // Close report-container div
 
     html += `
     </body>

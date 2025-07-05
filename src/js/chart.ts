@@ -138,18 +138,11 @@ export class Chart {
         },
         // splitNumber: 10
       },
-      dataZoom: [
-        {
-          type: "inside",
-          start: 0,
-          end: 100,
-        },
-        {
-          type: 'slider', // Added slider for better visibility
-          start: 0,
-          end: 100,
-        },
-      ],
+      legend: {
+        data: ['Distance (km)'],
+        bottom: 10,
+        left: 'center',
+      },
       dataset: {
         source: points.points,
       },
