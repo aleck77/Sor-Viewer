@@ -14,6 +14,13 @@ export class Chart {
   async draw(points: any, events: any) {
     let marker = await this.getMarkers(events);
     this.drawEchart(points, marker);
+
+    // Add a listener to resize the chart when the window is resized.
+    window.addEventListener("resize", () => {
+      if (this.chartInstance) {
+        this.chartInstance.resize();
+      }
+    });
   }
 
   async getMarkers(
@@ -59,6 +66,8 @@ export class Chart {
         type: "png",
         pixelRatio: 2,
         backgroundColor: "#fff",
+        // Exclude toolbox components (zoom, save, etc.) from the exported image
+        excludeComponents: ["toolbox"],
       });
     }
     console.error("Chart instance not available to capture image.");
@@ -96,9 +105,19 @@ export class Chart {
           ].join("");
         },
       },
+      grid: { // Added grid configuration
+        left: '10%',
+        right: '10%',
+        bottom: '15%', // Adjusted for dataZoom
+        containLabel: true
+      },
       toolbox: {
+        right: '5%', // Position toolbox to the right
         feature: {
-          dataZoom: {},
+          dataZoom: {
+            yAxisIndex: 'none' // Ensure dataZoom is for x-axis only
+          },
+          restore: {}, // Added restore button
           saveAsImage: {},
         },
       },
@@ -126,6 +145,7 @@ export class Chart {
           end: 100,
         },
         {
+          type: 'slider', // Added slider for better visibility
           start: 0,
           end: 100,
         },
@@ -154,6 +174,13 @@ export class Chart {
       ],
     };
     this.chartInstance.setOption(option);
+
+    // Resize the chart to fit its container AFTER setting options
+    setTimeout(() => {
+      if (this.chartInstance) {
+        this.chartInstance.resize();
+      }
+    }, 100); // Small timeout to ensure container is fully rendered
 
     /** Event Handling */
     this.chartInstance.on("mouseover", function (params: { name: string }) {

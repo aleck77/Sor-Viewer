@@ -4,7 +4,7 @@ export class Gui {
   chart: Chart;
   trPrefix: string;
   // Unique version identifier for caching debugging
-  version: string = "1.0.4-beta-20240701-4"; // New version for preview functionality
+  version: string = "1.0.5-release-20240701-5"; // New version for UI/UX improvements
 
   constructor() {
     this.trPrefix = "t_";
@@ -339,16 +339,23 @@ ${JSON.stringify(payload, null, 2)}`);
         table { border-collapse: collapse; margin-bottom: 20px; width: 100%; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #f2f2f2; }
-        img { max-width: 100%; height: auto; display: block; margin: 0 auto; margin-bottom: 20px; border: 1px solid #ddd; }
+        img { max-width: 100%; height: auto; display: block; margin: 0 auto 20px auto; border: 1px solid #ddd; }
+        .print-btn { position: fixed; top: 20px; right: 20px; padding: 10px 20px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+        @media print {
+          .print-btn {
+            display: none;
+          }
+        }
       </style>
     </head>
     <body>
-      <h1>Отчёт: ${data.sourceFile || "N/A"}</h1>
+      <button onclick="window.print()" class="print-btn">Save PDF</button>
+      <h1>Report: ${data.sourceFile || "N/A"}</h1>
     `;
 
     if (data.chartImage) {
       // Correctly close the img tag now
-      html += `<img src="${data.chartImage}" alt="График">`;
+      html += `<img src="${data.chartImage}" alt="OTDR Trace Chart">`;
     }
 
     if (data.summary && data.summary.length > 0) {
