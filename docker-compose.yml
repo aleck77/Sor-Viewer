@@ -14,5 +14,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+    user: root
     volumes:
       - ./public:/app/public
