@@ -6,6 +6,8 @@ export class Gui {
   // Unique version identifier for caching debugging
   version: string = "1.0.6-alpha-20240702-8"; // Incremented version after multiple attempts
 
+  currentPath: string = '';
+
   constructor() {
     this.trPrefix = "t_";
     this.chart = new Chart(this.trPrefix);
@@ -140,7 +142,7 @@ export class Gui {
         // Add row selection checkbox
         html += `<tr class='selectable-row' data-row-id="${tableId}-${i}">`;
         html += `<td><input type="checkbox" class="row-checkbox" data-row-index="${i}"></td>`; // New checkbox for row selection
-        html += await this.getTd(element, tableId === "events-table"); // Pass isEventsTable
+        html += await this.getTd(element);
         html += `</tr>`;
       }
     } else {
@@ -153,7 +155,7 @@ export class Gui {
     return html;
   }
 
-  async getTd(data: [], isEventsTable = false) {
+  async getTd(data: []) {
     let html = "";
     for (const key in data) {
       if (data.hasOwnProperty(key)) {
@@ -202,7 +204,7 @@ export class Gui {
           );
           columnCheckboxes?.forEach((cb) => {
             // Do not affect the row selection checkbox header (first th)
-            if (cb.parentElement?.tagName === 'TH' && cb.parentElement.cellIndex === 0) {
+            if (cb.parentElement?.tagName === 'TH' && (cb.parentElement as HTMLTableCellElement).cellIndex === 0) {
               return;
             }
             cb.checked = target.checked;
@@ -558,7 +560,7 @@ ${JSON.stringify(payload, null, 2)}`);
             const newFolderNameInput = document.getElementById('newFolderName') as HTMLInputElement;
             const newFolderName = newFolderNameInput.value;
             if (newFolderName) {
-                await this.createFolder(newFolderName);
+                await this.createFolder(newFolderName, this.currentPath);
                 newFolderNameInput.value = '';
                 this.loadFiles(); // Refresh file list
             }
@@ -570,7 +572,7 @@ ${JSON.stringify(payload, null, 2)}`);
             const fileUploadInput = document.getElementById('fileUpload') as HTMLInputElement;
             const file = fileUploadInput.files?.[0];
             if (file) {
-                await this.uploadFile(file);
+                await this.uploadFile(file, this.currentPath);
                 fileUploadInput.value = '';
                 this.loadFiles(); // Refresh file list
             }
@@ -579,6 +581,7 @@ ${JSON.stringify(payload, null, 2)}`);
   }
 
   async loadFiles(path = '') {
+    this.currentPath = path;
     try {
         const response = await fetch(`http://localhost:3000/api/files?path=${path}`);
         const files = await response.json();
@@ -607,7 +610,7 @@ ${JSON.stringify(payload, null, 2)}`);
                         // Handle file selection
                         const modal = document.getElementById("fileManagerModal");
                         if(modal) modal.style.display = "none";
-                        const fileUrl = `http://localhost:3000/public/${itemPath}`;
+                        const fileUrl = `/public/${itemPath}`;
                         // This is where you would pass the file to the parser.
                         // For now, we'll just log it.
                         console.log("Selected file:", fileUrl);

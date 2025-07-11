@@ -59,3 +59,34 @@ For questions and support please mail me <moosler@gmx.de>
 
 [MIT](http://opensource.org/licenses/MIT)
 Copyright (c) 2019-present, Marco Moosler
+
+## Deployment
+
+This section describes how to deploy the application on a server with Docker and Docker Compose.
+
+### Prerequisites
+
+- A server with a public IP address.
+- Docker and Docker Compose installed on the server.
+- A domain name pointed to the server's IP address (e.g., `sor.artelegis.com.ua`).
+
+### Steps
+
+1.  **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/aleck77/Sor-Viewer.git
+    cd Sor-Viewer
+    ```
+
+2.  **Build and run the application:**
+
+    ```bash
+    docker-compose up --build -d
+    ```
+
+    This command will build the Docker images and start the application in detached mode.
+
+3.  **Access the application:**
+
+    Once the application is running, you can access it in your web browser by navigating to your domain (e.g., `http://sor.artelegis.com.ua`).
