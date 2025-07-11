@@ -34,13 +34,26 @@ app.get('/api/files', (req, res) => {
 // API to create a new folder
 app.post('/api/folders', (req, res) => {
     const folderName = req.body.name;
-    const currentPath = req.body.path ? path.join(publicDir, req.body.path) : publicDir;
+    const relativePath = req.body.path || '';
+
+    console.log(`Received request to create folder: ${folderName} in path: ${relativePath}`);
+
+    if (!folderName || folderName.includes('/') || folderName.includes('..')) {
+        console.error('Invalid folder name received:', folderName);
+        return res.status(400).send('Invalid folder name.');
+    }
+
+    const currentPath = path.join(publicDir, relativePath);
     const newFolderPath = path.join(currentPath, folderName);
+
+    console.log(`Attempting to create directory at: ${newFolderPath}`);
 
     fs.mkdir(newFolderPath, { recursive: true }, (err) => {
         if (err) {
-            return res.status(500).send('Error creating directory: ' + err);
+            console.error('Error creating directory:', err);
+            return res.status(500).send('Error creating directory: ' + err.message);
         }
+        console.log(`Successfully created directory: ${newFolderPath}`);
         res.status(200).send('Directory created successfully');
     });
 });
@@ -58,7 +71,9 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-app.post('/api/upload', upload.single('file'), (_req, res) => {
+app.post('/api/upload', upload.single('file'), (req, res) => {
+    console.log(`File upload request received for path: ${req.body.path}`);
+    console.log('Uploaded file details:', req.file);
     res.status(200).send('File uploaded successfully');
 });
 

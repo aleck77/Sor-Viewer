@@ -583,7 +583,7 @@ ${JSON.stringify(payload, null, 2)}`);
   async loadFiles(path = '') {
     this.currentPath = path;
     try {
-        const response = await fetch(`http://localhost:3000/api/files?path=${path}`);
+        const response = await fetch(`/api/files?path=${path}`);
         const files = await response.json();
         const fileManager = document.getElementById('fileManager');
         if (fileManager) {
@@ -625,7 +625,7 @@ ${JSON.stringify(payload, null, 2)}`);
 
   async createFolder(name: string, path = '') {
     try {
-        await fetch('http://localhost:3000/api/folders', {
+        await fetch('/api/folders', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -640,10 +640,10 @@ ${JSON.stringify(payload, null, 2)}`);
   async uploadFile(file: File, path = '') {
     try {
         const formData = new FormData();
-        formData.append('file', file);
         formData.append('path', path);
+        formData.append('file', file);
 
-        await fetch('http://localhost:3000/api/upload', {
+        await fetch('/api/upload', {
             method: 'POST',
             body: formData
         });
