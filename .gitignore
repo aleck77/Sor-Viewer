@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 
 .idx/**
+GEMINI.md
+task.md
