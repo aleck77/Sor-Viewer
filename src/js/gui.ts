@@ -9,6 +9,7 @@ export class Gui {
   constructor() {
     this.trPrefix = "t_";
     this.chart = new Chart(this.trPrefix);
+    this.initializeFileManager();
     console.log("Gui version:", this.version); // New Log
   }
 
@@ -524,5 +525,127 @@ ${JSON.stringify(payload, null, 2)}`);
     </html>
     `;
     return html;
+  }
+
+  initializeFileManager() {
+    const modal = document.getElementById("fileManagerModal");
+    const btn = document.getElementById("btnBrowse");
+    const span = document.getElementsByClassName("close")[0] as HTMLElement;
+    const btnCreateFolder = document.getElementById("btnCreateFolder");
+    const btnUploadFile = document.getElementById("btnUploadFile");
+
+    if(btn) {
+        btn.onclick = () => {
+            if(modal) modal.style.display = "block";
+            this.loadFiles();
+        }
+    }
+
+    if(span) {
+        span.onclick = () => {
+            if(modal) modal.style.display = "none";
+        }
+    }
+
+    window.onclick = (event) => {
+        if (event.target == modal) {
+            if(modal) modal.style.display = "none";
+        }
+    }
+
+    if(btnCreateFolder) {
+        btnCreateFolder.onclick = async () => {
+            const newFolderNameInput = document.getElementById('newFolderName') as HTMLInputElement;
+            const newFolderName = newFolderNameInput.value;
+            if (newFolderName) {
+                await this.createFolder(newFolderName);
+                newFolderNameInput.value = '';
+                this.loadFiles(); // Refresh file list
+            }
+        };
+    }
+
+    if(btnUploadFile) {
+        btnUploadFile.onclick = async () => {
+            const fileUploadInput = document.getElementById('fileUpload') as HTMLInputElement;
+            const file = fileUploadInput.files?.[0];
+            if (file) {
+                await this.uploadFile(file);
+                fileUploadInput.value = '';
+                this.loadFiles(); // Refresh file list
+            }
+        };
+    }
+  }
+
+  async loadFiles(path = '') {
+    try {
+        const response = await fetch(`http://localhost:3000/api/files?path=${path}`);
+        const files = await response.json();
+        const fileManager = document.getElementById('fileManager');
+        if (fileManager) {
+            let html = '<ul>';
+            if (path !== '') {
+                html += `<li class="dir-up">..</li>`;
+            }
+            files.forEach((file: { name: string, isDirectory: boolean }) => {
+                html += `<li class="${file.isDirectory ? 'dir' : 'file'}" data-path="${path ? path + '/' : ''}${file.name}">${file.name}</li>`;
+            });
+            html += '</ul>';
+            fileManager.innerHTML = html;
+
+            // Add event listeners
+            fileManager.querySelectorAll('li').forEach(item => {
+                item.addEventListener('click', () => {
+                    const itemPath = item.getAttribute('data-path');
+                    if (item.classList.contains('dir')) {
+                        this.loadFiles(itemPath || '');
+                    } else if (item.classList.contains('dir-up')) {
+                        const parentPath = path.substring(0, path.lastIndexOf('/'));
+                        this.loadFiles(parentPath);
+                    } else {
+                        // Handle file selection
+                        const modal = document.getElementById("fileManagerModal");
+                        if(modal) modal.style.display = "none";
+                        const fileUrl = `http://localhost:3000/public/${itemPath}`;
+                        // This is where you would pass the file to the parser.
+                        // For now, we'll just log it.
+                        console.log("Selected file:", fileUrl);
+                    }
+                });
+            });
+        }
+    } catch (error) {
+        console.error('Error loading files:', error);
+    }
+  }
+
+  async createFolder(name: string, path = '') {
+    try {
+        await fetch('http://localhost:3000/api/folders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, path })
+        });
+    } catch (error) {
+        console.error('Error creating folder:', error);
+    }
+  }
+
+  async uploadFile(file: File, path = '') {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('path', path);
+
+        await fetch('http://localhost:3000/api/upload', {
+            method: 'POST',
+            body: formData
+        });
+    } catch (error) {
+        console.error('Error uploading file:', error);
+    }
   }
 }

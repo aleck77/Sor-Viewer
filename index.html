@@ -27,6 +27,7 @@
         <form action="#" onsubmit="return false;">
           <input type="file" id="fileinput" accept=".sor,.SOR" />
           <input type="button" id="btnLoad" value="Load" />
+          <input type="button" id="btnBrowse" value="Browse Server" />
         </form>
         <div class="Send-Controls" id="send-controls"></div>
       </div>
@@ -40,6 +41,20 @@
     </div>
     <div id="footer">
       <a href="mailto:aleck541977@gmail.com"> Alex </a>2022
+    </div>
+
+    <div id="fileManagerModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>File Manager</h2>
+        <div id="fileManagerControls">
+          <input type="text" id="newFolderName" placeholder="New folder name" />
+          <button id="btnCreateFolder">Create Folder</button>
+          <input type="file" id="fileUpload" />
+          <button id="btnUploadFile">Upload</button>
+        </div>
+        <div id="fileManager"></div>
+      </div>
     </div>
 
     <div id="app"></div>
