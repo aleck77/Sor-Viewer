@@ -15,7 +15,8 @@ const publicDir = path.resolve(process.cwd(), 'public');
 
 // API to get files and directories
 app.get('/api/files', (req, res) => {
-    const currentPath = req.query.path ? path.join(publicDir, req.query.path as string) : publicDir;
+    const relativePath = req.query.path ? (req.query.path as string) : '';
+    const currentPath = path.join(publicDir, relativePath);
 
     fs.readdir(currentPath, { withFileTypes: true }, (err, files) => {
         if (err) {
@@ -27,7 +28,10 @@ app.get('/api/files', (req, res) => {
             isDirectory: file.isDirectory(),
         }));
 
-        res.json(fileData);
+        res.json({
+            currentPath: relativePath,
+            files: fileData
+        });
     });
 });
 

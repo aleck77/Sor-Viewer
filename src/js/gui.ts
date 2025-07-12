@@ -12,6 +12,7 @@ export class Gui {
     this.trPrefix = "t_";
     this.chart = new Chart(this.trPrefix);
     this.initializeFileManager();
+    this.renderTemplates();
     console.log("Gui version:", this.version); // New Log
   }
 
@@ -188,6 +189,7 @@ export class Gui {
     this.setupActionButtons();
     this.setupPropCheckboxes();
     this.setupToggleButtons();
+    this.setupTemplateButtons();
   }
 
   setupSelectAllCheckboxes() {
@@ -256,6 +258,165 @@ export class Gui {
         }
       });
     });
+  }
+
+  setupTemplateButtons() {
+    const saveTemplateBtn = document.getElementById("save-template-btn");
+    const clearSelectionsBtn = document.getElementById("clear-selections-btn");
+
+    if (saveTemplateBtn) {
+      saveTemplateBtn.addEventListener("click", () => {
+        const templateNameInput = <HTMLInputElement>document.getElementById("template-name-input");
+        const templateName = templateNameInput.value.trim();
+        if (templateName) {
+          this.saveTemplate(templateName);
+          templateNameInput.value = "";
+        } else {
+          alert("Please enter a template name.");
+        }
+      });
+    }
+
+    if (clearSelectionsBtn) {
+      clearSelectionsBtn.addEventListener("click", () => {
+        this.clearSelections();
+      });
+    }
+
+    this.renderTemplates();
+  }
+
+  clearSelections() {
+    // Clear all checkboxes
+    document.querySelectorAll<HTMLInputElement>(".prop-checkbox, .header-checkbox, .row-checkbox").forEach(checkbox => {
+      checkbox.checked = false;
+    });
+
+    // Clear all selected rows
+    document.querySelectorAll<HTMLTableRowElement>("#events-table tr.selected").forEach(row => {
+      row.classList.remove("selected");
+    });
+
+    // Clear include chart checkbox
+    const sendChartCheckbox = document.getElementById("send-chart-checkbox") as HTMLInputElement;
+    if (sendChartCheckbox) {
+      sendChartCheckbox.checked = false;
+    }
+  }
+
+  saveTemplate(name: string) {
+    const sendChartCheckbox = document.getElementById("send-chart-checkbox") as HTMLInputElement;
+
+    const selectedCheckboxes = {
+      properties: [] as string[],
+      summary: [] as string[],
+      events: [] as string[],
+      eventRows: [] as number[],
+      includeChart: sendChartCheckbox.checked,
+    };
+
+    document.querySelectorAll<HTMLInputElement>(".prop-checkbox:checked").forEach(checkbox => {
+      selectedCheckboxes.properties.push(checkbox.dataset.key!);
+    });
+
+    document.querySelectorAll<HTMLInputElement>("#summary-table .header-checkbox:checked").forEach(checkbox => {
+      selectedCheckboxes.summary.push(checkbox.dataset.key!);
+    });
+
+    document.querySelectorAll<HTMLInputElement>("#events-table .header-checkbox:checked").forEach(checkbox => {
+      selectedCheckboxes.events.push(checkbox.dataset.key!);
+    });
+
+    document.querySelectorAll<HTMLInputElement>("#events-table .row-checkbox:checked").forEach(checkbox => {
+      selectedCheckboxes.eventRows.push(parseInt(checkbox.dataset.rowIndex!));
+    });
+
+    localStorage.setItem(`template_${name}`, JSON.stringify(selectedCheckboxes));
+    this.renderTemplates();
+  }
+
+  loadTemplate(name: string) {
+    const templateData = localStorage.getItem(`template_${name}`);
+    if (templateData) {
+      const selectedCheckboxes = JSON.parse(templateData);
+
+      // Clear all checkboxes first
+      document.querySelectorAll<HTMLInputElement>(".prop-checkbox, .header-checkbox, .row-checkbox").forEach(checkbox => {
+        checkbox.checked = false;
+      });
+
+      // Clear all selected rows
+      document.querySelectorAll<HTMLTableRowElement>("#events-table tr.selected").forEach(row => {
+        row.classList.remove("selected");
+      });
+
+      // Apply template
+      selectedCheckboxes.properties.forEach((key: string) => {
+        const checkbox = document.querySelector<HTMLInputElement>(`.prop-checkbox[data-key="${key}"]`);
+        if (checkbox) checkbox.checked = true;
+      });
+
+      selectedCheckboxes.summary.forEach((key: string) => {
+        const checkbox = document.querySelector<HTMLInputElement>(`#summary-table .header-checkbox[data-key="${key}"]`);
+        if (checkbox) checkbox.checked = true;
+      });
+
+      selectedCheckboxes.events.forEach((key: string) => {
+        const checkbox = document.querySelector<HTMLInputElement>(`#events-table .header-checkbox[data-key="${key}"]`);
+        if (checkbox) checkbox.checked = true;
+      });
+
+      selectedCheckboxes.eventRows.forEach((rowIndex: number) => {
+        const checkbox = document.querySelector<HTMLInputElement>(`#events-table .row-checkbox[data-row-index="${rowIndex}"]`);
+        if (checkbox) {
+          checkbox.checked = true;
+          const row = checkbox.closest("tr");
+          if (row) {
+            row.classList.add("selected");
+          }
+        }
+      });
+
+      const sendChartCheckbox = document.getElementById("send-chart-checkbox") as HTMLInputElement;
+      if (sendChartCheckbox) {
+        sendChartCheckbox.checked = selectedCheckboxes.includeChart;
+      }
+    }
+  }
+
+  renderTemplates() {
+    const templatesList = document.getElementById("templates-list");
+    if (templatesList) {
+      templatesList.innerHTML = "";
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("template_")) {
+          const templateName = key.replace("template_", "");
+          const buttonContainer = document.createElement("div");
+          buttonContainer.style.display = "flex";
+          buttonContainer.style.alignItems = "center";
+          buttonContainer.style.marginBottom = "5px";
+
+          const button = document.createElement("button");
+          button.textContent = templateName;
+          button.style.marginRight = "10px";
+          button.addEventListener("click", () => {
+            this.loadTemplate(templateName);
+          });
+
+          const deleteButton = document.createElement("button");
+          deleteButton.textContent = "Delete";
+          deleteButton.addEventListener("click", () => {
+            localStorage.removeItem(key);
+            this.renderTemplates();
+          });
+
+          buttonContainer.appendChild(button);
+          buttonContainer.appendChild(deleteButton);
+          templatesList.appendChild(buttonContainer);
+        }
+      }
+    }
   }
 
   /** Gathers all selected data from the UI */
@@ -583,30 +744,35 @@ ${JSON.stringify(payload, null, 2)}`);
   async loadFiles(path = '') {
     this.currentPath = path;
     try {
-        const response = await fetch(`/api/files?path=${path}`);
-        const files = await response.json();
+        const response = await fetch(`/api/files?path=${encodeURIComponent(path)}`);
+        const data = await response.json();
         const fileManager = document.getElementById('fileManager');
         if (fileManager) {
-            let html = '<ul>';
-            if (path !== '') {
-                html += `<li class="dir-up">..</li>`;
+            let html = `<h2>Index of /${data.currentPath}</h2>`;
+            html += '<hr><pre>';
+            if (data.currentPath !== '') {
+                html += `<a href="#" class="dir-up">../</a>\n`;
             }
-            files.forEach((file: { name: string, isDirectory: boolean }) => {
-                html += `<li class="${file.isDirectory ? 'dir' : 'file'}" data-path="${path ? path + '/' : ''}${file.name}">${file.name}</li>`;
+            data.files.forEach((file: { name: string, isDirectory: boolean }) => {
+                const fullPath = data.currentPath ? `${data.currentPath}/${file.name}` : file.name;
+                const linkClass = file.isDirectory ? 'dir' : 'file';
+                const linkText = file.isDirectory ? `${file.name}/` : file.name;
+                html += `<a href="#" class="${linkClass}" data-path="${fullPath}">${linkText}</a>\n`;
             });
-            html += '</ul>';
+            html += '</pre><hr>';
             fileManager.innerHTML = html;
 
             // Add event listeners
-            fileManager.querySelectorAll('li').forEach(item => {
-                item.addEventListener('click', () => {
+            fileManager.querySelectorAll('a').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
                     const itemPath = item.getAttribute('data-path');
                     if (item.classList.contains('dir')) {
                         this.loadFiles(itemPath || '');
                     } else if (item.classList.contains('dir-up')) {
                         const parentPath = path.substring(0, path.lastIndexOf('/'));
                         this.loadFiles(parentPath);
-                    } else {
+                    } else if (item.classList.contains('file')) {
                         // Handle file selection
                         const modal = document.getElementById("fileManagerModal");
                         if(modal) modal.style.display = "none";
