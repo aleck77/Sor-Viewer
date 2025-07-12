@@ -1,4 +1,5 @@
 import { Chart } from "./chart";
+import { SorReader } from './sor';
 
 export class Gui {
   chart: Chart;
@@ -522,8 +523,6 @@ ${JSON.stringify(payload, null, 2)}`);
         if (newWindow) {
           newWindow.document.write(htmlReportContent);
           newWindow.document.close();
-        } else {
-          alert("Please allow pop-ups for this site to preview the report.");
         }
       });
     }
@@ -696,6 +695,7 @@ ${JSON.stringify(payload, null, 2)}`);
     const span = document.getElementsByClassName("close")[0] as HTMLElement;
     const btnCreateFolder = document.getElementById("btnCreateFolder");
     const btnUploadFile = document.getElementById("btnUploadFile");
+    const btnUploadToParser = document.getElementById("btnUploadToParser");
 
     if(btn) {
         btn.onclick = () => {
@@ -739,7 +739,41 @@ ${JSON.stringify(payload, null, 2)}`);
             }
         };
     }
+    if (btnUploadToParser) {
+      btnUploadToParser.onclick = async () => {
+          const checkboxes = document.querySelectorAll<HTMLInputElement>('.file-checkbox:checked');
+          const filesToParse: string[] = [];
+          checkboxes.forEach(checkbox => {
+              filesToParse.push(checkbox.dataset.path!);
+          });
+
+          if (filesToParse.length > 0) {
+              this.parseFiles(filesToParse);
+              const modal = document.getElementById("fileManagerModal");
+              if (modal) modal.style.display = "none";
+          } else {
+              alert("Please select at least one file to parse.");
+          }
+      };
   }
+}
+
+async parseFiles(files: string[]) {
+  this.clearDivs();
+  for (const filePath of files) {
+    try {
+      const response = await fetch(`/public/${filePath}`);
+      const arrayBuffer = await response.arrayBuffer();
+      const filename = filePath.split("/").pop()!;
+      const config = { browserMode: true };
+      const sor = new SorReader(undefined, config, arrayBuffer);
+      const data = await sor.parse();
+      this.showResults(data, filename);
+    } catch (error) {
+      console.error(`Error parsing file ${filePath}:`, error);
+    }
+  }
+}
 
   async loadFiles(path = '') {
     this.currentPath = path;
@@ -757,7 +791,11 @@ ${JSON.stringify(payload, null, 2)}`);
                 const fullPath = data.currentPath ? `${data.currentPath}/${file.name}` : file.name;
                 const linkClass = file.isDirectory ? 'dir' : 'file';
                 const linkText = file.isDirectory ? `${file.name}/` : file.name;
-                html += `<a href="#" class="${linkClass}" data-path="${fullPath}">${linkText}</a>\n`;
+                if (file.isDirectory) {
+                    html += `<a href="#" class="${linkClass}" data-path="${fullPath}">${linkText}</a>\n`;
+                } else {
+                    html += `<input type="checkbox" class="file-checkbox" data-path="${fullPath}" style="margin-right: 5px;"><a href="#" class="${linkClass}" data-path="${fullPath}">${linkText}</a>\n`;
+                }
             });
             html += '</pre><hr>';
             fileManager.innerHTML = html;
