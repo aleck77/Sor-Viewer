@@ -88,7 +88,18 @@ export class Gui {
           )}</li>`;
         } else {
           // Add checkbox for each property
-          html += `<li><input type="checkbox" class="prop-checkbox" data-key="${key}" data-value="${element}" style="margin-right: 5px;"><b>${key}: </b>${element}</li>`;
+          let displayElement = element;
+          let dataValue = element;
+          if (key.toLowerCase() === 'range' && typeof element === 'string' && element.includes('km')) {
+            const parts = element.split(' ');
+            const value = parseFloat(parts[0]);
+            if (!isNaN(value)) {
+              const roundedValue = `${value.toFixed(3)} km`;
+              displayElement = roundedValue;
+              dataValue = roundedValue;
+            }
+          }
+          html += `<li><input type="checkbox" class="prop-checkbox" data-key="${key}" data-value="${dataValue}" style="margin-right: 5px;"><b>${key}: </b>${displayElement}</li>`;
         }
       }
     }

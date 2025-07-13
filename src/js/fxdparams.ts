@@ -105,7 +105,7 @@ export class Fxdparam {
                 "type": "uInt",
                 "length": 4,
                 "scale": 2e-5,
-                "pres": 6,
+                "pres": 3,
                 "unit": "km",
                 "func": ["tDx"],
                 "params": [
