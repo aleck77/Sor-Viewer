@@ -13,8 +13,26 @@ export class Gui {
     this.trPrefix = "t_";
     this.chart = new Chart(this.trPrefix);
     this.initializeFileManager();
+    this.createDefaultTemplates();
     this.renderTemplates();
     console.log("Gui version:", this.version); // New Log
+  }
+
+  createDefaultTemplates() {
+    const defaultTemplateName = "Main template";
+    if (!localStorage.getItem(`template_${defaultTemplateName}`)) {
+      const defaultTemplate = {
+        properties: ["wavelength", "pulse width", "range"],
+        summary: ["total loss"],
+        events: ["distance", "slope", "refl loss"],
+        eventRows: [1],
+        includeChart: true,
+      };
+      localStorage.setItem(
+        `template_${defaultTemplateName}`,
+        JSON.stringify(defaultTemplate)
+      );
+    }
   }
 
   clearDivs() {
