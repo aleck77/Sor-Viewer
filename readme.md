@@ -1,92 +1,86 @@
-# OTDR-Viewer
+# SOR Viewer
 
-This is an simple Online Viewer for SOR Files ("Standard OTDR Record"- Telcordia SR-4731, issue 2 standard). This data Format ist used to store OTDR fiber data.
-This is an ES6 Implementation of the Version from [sid5432](https://github.com/sid5432/jsOTDR).
+This is a single-page application (SPA) for viewing and processing SOR (Standard OTDR Record) files, a format used for storing optical fiber data (Telcordia SR-4731, issue 2). The application allows users to upload SOR files from their local directory, parse them, and generate PDF reports from the parsed data.
 
-## Introduction
+## Key Features
 
-You can use this repo as browser version or node version.
-Currently only SOR files from version 2 are supported.
+*   **SOR File Parsing:** Upload and parse SOR files to extract key parameters.
+*   **Data Visualization:** View parsed data in tables (Properties, Summary, Events) and as a chart.
+*   **Customizable Reports:** Select specific parameters from the parsed data to be included in a report.
+*   **Report Preview:** Preview the report in a new browser tab before saving it as a PDF.
+*   **Template Management:**
+    *   Save a selection of parameters as a template.
+    *   Load saved templates to quickly apply a standard set of parameters.
+    *   A default "Main template" is available on first use.
+*   **File Management:**
+    *   Browse files and folders on the server.
+    *   Upload new SOR files to the server.
+    *   Create new folders on the server.
 
-## Example
+## Tech Stack
 
-check out [live example](https://marmoo.de/coding/otdr/).
+*   **Frontend:** TypeScript, HTML, CSS
+*   **Backend:** Node.js with Express (for file management)
+*   **Charting:** ECharts
+*   **Bundler:** Vite
 
-## install
+## Installation and Setup
 
-```bash
-git clone https://github.com/moosler/Sor-Viewer.git otdr
-cd otdr
-npm install
-```
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/moosler/Sor-Viewer.git otdr
+    cd otdr
+    ```
 
-### start dev mode
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+## Development Mode
+
+To run the application in development mode with hot-reloading:
 
 ```bash
 npm run dev
 ```
 
-### start Browser Version
+## Browser Version
+
+To build the application for production and preview it:
 
 ```bash
 npm run build
-npm rund preview
+npm run preview
 ```
-
-### Config
-
-Some Config parameters can be set.
-In the browser version the variable "config" in "main-browser.js" can be adjusted.
-In the node version the variable "config" in "node.js" can be adjusted.
-The following values can be set:
-
-- debug: false, // IF true Logging Infos are displayed to Console
-- createJson: false, //only for Node Version. If true results ar wirtten in an File called "result.js"
-- jsonPath: '.', //only for Node Version and if createJson is true. This is the path there the json file is saved
-- jsonName: 'result.json', //if createJson is true this is the name of the json File
-- devMode: false, //For Development: if true only the first 100 DataPoints are read
-- browserMode: false //BrowserMode
-
-## Questions
-
-For questions and support please mail me <moosler@gmx.de>
-
-## Knwon Issues
-
-- SOR Version 1 not supported yet
-
-## License
-
-[MIT](http://opensource.org/licenses/MIT)
-Copyright (c) 2019-present, Marco Moosler
 
 ## Deployment
 
-This section describes how to deploy the application on a server with Docker and Docker Compose.
+The application can be deployed using Docker and Docker Compose.
 
 ### Prerequisites
 
-- A server with a public IP address.
-- Docker and Docker Compose installed on the server.
-- A domain name pointed to the server's IP address (e.g., `sor.artelegis.com.ua`).
+*   A server with a public IP address.
+*   Docker and Docker Compose installed on the server.
+*   A domain name pointed to the server's IP address.
 
 ### Steps
 
 1.  **Clone the repository:**
-
     ```bash
     git clone https://github.com/aleck77/Sor-Viewer.git
     cd Sor-Viewer
     ```
 
 2.  **Build and run the application:**
-
     ```bash
     docker-compose up --build -d
     ```
 
-    This command will build the Docker images and start the application in detached mode.
-
 3.  **Access the application:**
+    Access the application in your web browser by navigating to your domain.
 
-    Once the application is running, you can access it in your web browser by navigating to your domain (e.g., `http://sor.artelegis.com.ua`).
+## License
+
+[MIT](http://opensource.org/licenses/MIT)
+Copyright (c) 2019-present, Marco Moosler
