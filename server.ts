@@ -75,10 +75,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-app.post('/api/upload', upload.single('file'), (req, res) => {
-    console.log(`File upload request received for path: ${req.body.path}`);
-    console.log('Uploaded file details:', req.file);
-    res.status(200).send('File uploaded successfully');
+app.post('/api/upload', upload.array('files', 20), (req, res) => {
+    console.log(`Files upload request received for path: ${req.body.path}`);
+    console.log('Uploaded files details:', req.files);
+    res.status(200).send('Files uploaded successfully');
 });
 
 

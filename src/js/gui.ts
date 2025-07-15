@@ -760,9 +760,9 @@ ${JSON.stringify(payload, null, 2)}`);
     if(btnUploadFile) {
         btnUploadFile.onclick = async () => {
             const fileUploadInput = document.getElementById('fileUpload') as HTMLInputElement;
-            const file = fileUploadInput.files?.[0];
-            if (file) {
-                await this.uploadFile(file, this.currentPath);
+            const files = fileUploadInput.files;
+            if (files && files.length > 0) {
+                await this.uploadFiles(files, this.currentPath);
                 fileUploadInput.value = '';
                 this.loadFiles(); // Refresh file list
             }
@@ -870,18 +870,20 @@ async parseFiles(files: string[]) {
     }
   }
 
-  async uploadFile(file: File, path = '') {
+  async uploadFiles(files: FileList, path = '') {
     try {
         const formData = new FormData();
         formData.append('path', path);
-        formData.append('file', file);
+        for (let i = 0; i < files.length; i++) {
+            formData.append('files', files[i]);
+        }
 
         await fetch('/api/upload', {
             method: 'POST',
             body: formData
         });
     } catch (error) {
-        console.error('Error uploading file:', error);
+        console.error('Error uploading files:', error);
     }
   }
 }
