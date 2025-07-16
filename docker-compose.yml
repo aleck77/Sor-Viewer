@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
+    volumes:
+      - public_data:/usr/share/nginx/public
     depends_on:
       - backend
 
@@ -13,4 +15,7 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     volumes:
-      - ./public:/app/public
+      - public_data:/app/public
+
+volumes:
+  public_data:

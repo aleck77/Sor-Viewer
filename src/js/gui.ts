@@ -40,6 +40,8 @@ export class Gui {
       "OTDR Trace Chart": "Графік рефлектограми",
       "unknown": "невідомо",
       "number": "№",
+      "Browse series": "Огляд серій",
+      "Analyze selected": "Аналіз вибраного",
       // phrases
       "Please select some data or include the chart to perform an action.": "Будь ласка, виберіть дані або включіть графік для виконання дії.",
       "Please enter a template name.": "Будь ласка, введіть назву шаблону.",
@@ -52,7 +54,17 @@ export class Gui {
     this.initializeFileManager();
     this.createDefaultTemplates();
     this.renderTemplates();
+    this.translateUI();
     console.log("Gui version:", this.version); // New Log
+  }
+
+  translateUI() {
+    document.querySelectorAll<HTMLElement>('[data-translate-key]').forEach(element => {
+      const key = element.dataset.translateKey;
+      if (key) {
+        element.textContent = this.translate(key);
+      }
+    });
   }
 
   translate(key: string): string {
@@ -843,7 +855,8 @@ async parseFiles(files: string[]) {
   this.clearDivs();
   for (const filePath of files) {
     try {
-      const response = await fetch(`/public/${filePath}`);
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/public/${filePath}?t=${timestamp}`);
       const arrayBuffer = await response.arrayBuffer();
       const filename = filePath.split("/").pop()!;
       const config = { browserMode: true };
@@ -952,7 +965,9 @@ async parseFiles(files: string[]) {
         xhr.onload = () => {
             if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
             if (xhr.status === 200) {
-                this.loadFiles(this.currentPath);
+                setTimeout(() => {
+                    this.loadFiles(this.currentPath);
+                }, 500); // 500ms delay
             } else {
                 console.error('Error uploading files:', xhr.statusText);
             }
