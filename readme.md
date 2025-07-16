@@ -83,4 +83,4 @@ The application can be deployed using Docker and Docker Compose.
 ## License
 
 [MIT](http://opensource.org/licenses/MIT)
-Copyright (c) 2019-present, Marco Moosler
+Copyright (c) 2025-present, Oleksandr Oshatiuk
