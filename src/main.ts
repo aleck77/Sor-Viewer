@@ -16,6 +16,15 @@ const config = {
 const UserInterface = new Gui();
 const button = document.getElementById("btnLoad");
 const fileInput = <HTMLInputElement>document.getElementById("fileinput");
+const fileChosen = document.getElementById("file-chosen");
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files && fileInput.files.length > 0) {
+    fileChosen!.textContent = fileInput.files[0].name;
+  } else {
+    fileChosen!.textContent = "Файл не вибрано";
+  }
+});
 
 button?.addEventListener("click", function handleClick() {
   console.log("Load button clicked.");

@@ -8,14 +8,55 @@ export class Gui {
   version: string = "1.0.6-alpha-20240702-8"; // Incremented version after multiple attempts
 
   currentPath: string = '';
+  translations: { [key: string]: string };
 
   constructor() {
     this.trPrefix = "t_";
     this.chart = new Chart(this.trPrefix);
+    this.translations = {
+      "wavelength": "Довжина хвилі",
+      "pulse width": "Ширина імпульсу",
+      "range": "Діапазон",
+      "total loss": "Загальні втрати",
+      "distance": "Відстань",
+      "slope": "Нахил",
+      "refl loss": "Втрати на відбитті",
+      "Main template": "Головний шаблон",
+      "Properties": "Властивості",
+      "Summary": "Зведення",
+      "Events": "Події",
+      "Actions": "Дії",
+      "Filename": "Ім'я файлу",
+      "Include Chart Image (PNG)": "Додати графік (PNG)",
+      "Preview Report": "Перегляд звіту",
+      "Select all columns": "Вибрати всі стовпці",
+      "Select All": "Вибрати все",
+      "Save template": "Зберегти шаблон",
+      "Clear selections": "Очистити вибір",
+      "Delete": "Видалити",
+      "Report": "Звіт",
+      "Save PDF": "Зберегти PDF",
+      "OTDR Report": "Звіт OTDR",
+      "OTDR Trace Chart": "Графік рефлектограми",
+      "unknown": "невідомо",
+      "number": "№",
+      // phrases
+      "Please select some data or include the chart to perform an action.": "Будь ласка, виберіть дані або включіть графік для виконання дії.",
+      "Please enter a template name.": "Будь ласка, введіть назву шаблону.",
+      "Data sent successfully as JSON!": "Дані успішно надіслано у форматі JSON!",
+      "Failed to send data": "Не вдалося надіслати дані",
+      "An error occurred while sending data": "Під час надсилання даних сталася помилка",
+      "Index of": "Вміст теки",
+      "Please select at least one file to parse.": "Будь ласка, виберіть хоча б один файл для аналізу.",
+    };
     this.initializeFileManager();
     this.createDefaultTemplates();
     this.renderTemplates();
     console.log("Gui version:", this.version); // New Log
+  }
+
+  translate(key: string): string {
+    return this.translations[key] || key;
   }
 
   createDefaultTemplates() {
@@ -73,17 +114,17 @@ export class Gui {
 
     const html = `
       <div style="margin-top: 20px; border-top: 2px solid #ccc; padding-top: 15px;">
-        <h3>Actions</h3>
+        <h3>${this.translate("Actions")}</h3>
         <div style="display: flex; align-items: center; gap: 20px; margin-top: 10px;">
           <div style="display: flex; align-items: center;">
-            <label for="source-filename-input" style="margin-right: 5px;">Filename:</label>
+            <label for="source-filename-input" style="margin-right: 5px;">${this.translate("Filename")}:</label>
             <input type="text" id="source-filename-input" value="${filename}" style="width: 200px;">
           </div>
           <div>
-            <label for="send-chart-checkbox" style="margin-right: 5px;">Include Chart Image (PNG)</label>
+            <label for="send-chart-checkbox" style="margin-right: 5px;">${this.translate("Include Chart Image (PNG)")}</label>
             <input type="checkbox" id="send-chart-checkbox">
           </div>
-          <button id="preview-report-btn" style="padding: 8px 16px; font-size: 16px; cursor: pointer; margin-left: 10px;">Preview Report</button>
+          <button id="preview-report-btn" style="padding: 8px 16px; font-size: 16px; cursor: pointer; margin-left: 10px;">${this.translate("Preview Report")}</button>
         </div>
       </div>
     `;
@@ -101,7 +142,7 @@ export class Gui {
         const element = data[key];
         // Add checkbox only for final values, not for nested objects (lists/sub-lists)
         if (typeof element === "object" && element !== null) {
-          html += `<li><span class="toggle-btn"></span><b>${key}: </b>${await this.createPropertyList(
+          html += `<li><span class="toggle-btn"></span><b>${this.translate("key")}: </b>${await this.createPropertyList(
             element
           )}</li>`;
         } else {
@@ -117,7 +158,7 @@ export class Gui {
               dataValue = roundedValue;
             }
           }
-          html += `<li><input type="checkbox" class="prop-checkbox" data-key="${key}" data-value="${dataValue}" style="margin-right: 5px;"><b>${key}: </b>${displayElement}</li>`;
+          html += `<li><input type="checkbox" class="prop-checkbox" data-key="${key}" data-value="${dataValue}" style="margin-right: 5px;"><b>${this.translate(key)}: </b>${displayElement}</li>`;
         }
       }
     }
@@ -150,9 +191,9 @@ export class Gui {
   async createTable(data: any[], name: string, id = "") {
     let html = `
       <div style="display: flex; align-items: center; gap: 10px;">
-        <h3>${name}</h3>
-        <input type="checkbox" id="${id}-select-all" class="select-all-checkbox" data-table-id="${id}" title="Select all columns">
-        <label for="${id}-select-all">Select All</label>
+        <h3>${this.translate(name)}</h3>
+        <input type="checkbox" id="${id}-select-all" class="select-all-checkbox" data-table-id="${id}" title="${this.translate("Select all columns")}">
+        <label for="${id}-select-all">${this.translate("Select All")}</label>
       </div>`;
     html += `<table id='${id}'>`;
     if (Array.isArray(data) && data.length > 0) {
@@ -204,10 +245,10 @@ export class Gui {
     for (const key in data) {
       // Skip 'number' column for events-table if it's the events table
       if (tableId === "events-table" && key === "number") {
-        html += `<th>${key}</th>`;
+        html += `<th>${this.translate(key)}</th>`;
         continue;
       }
-      html += `<th><input type="checkbox" class="header-checkbox" data-key="${key}" style="margin-right: 5px;">${key}</th>`;
+      html += `<th><input type="checkbox" class="header-checkbox" data-key="${key}" style="margin-right: 5px;">${this.translate(key)}</th>`;
     }
     html += `</tr></thead>`;
     return html;
@@ -302,7 +343,7 @@ export class Gui {
           this.saveTemplate(templateName);
           templateNameInput.value = "";
         } else {
-          alert("Please enter a template name.");
+          alert(this.translate("Please enter a template name."));
         }
       });
     }
@@ -428,14 +469,14 @@ export class Gui {
           buttonContainer.style.marginBottom = "5px";
 
           const button = document.createElement("button");
-          button.textContent = templateName;
+          button.textContent = this.translate(templateName);
           button.style.marginRight = "10px";
           button.addEventListener("click", () => {
             this.loadTemplate(templateName);
           });
 
           const deleteButton = document.createElement("button");
-          deleteButton.textContent = "Delete";
+          deleteButton.textContent = this.translate("Delete");
           deleteButton.addEventListener("click", () => {
             localStorage.removeItem(key);
             this.renderTemplates();
@@ -500,7 +541,7 @@ export class Gui {
 
     // Check if any actual data (besides sourceFile) was added
     if (Object.keys(payload).length === 1 && payload.hasOwnProperty('sourceFile')) {
-      alert("Please select some data or include the chart to perform an action.");
+      alert(this.translate("Please select some data or include the chart to perform an action."));
       return null;
     }
 
@@ -527,14 +568,14 @@ ${JSON.stringify(payload, null, 2)}`);
             body: JSON.stringify(payload),
           });
           if (response.ok) {
-            alert(`Data sent successfully as JSON!`);
+            alert(this.translate(`Data sent successfully as JSON!`));
           } else {
             const errorText = await response.text();
-            alert(`Failed to send data: ${response.status} ${errorText}`);
+            alert(`${this.translate("Failed to send data")}: ${response.status} ${errorText}`);
           }
         } catch (error) {
           console.error("Error sending data:", error);
-          alert(`An error occurred while sending data: ${error}`);
+          alert(`${this.translate("An error occurred while sending data")}: ${error}`);
         }
       });
     }
@@ -646,12 +687,13 @@ ${JSON.stringify(payload, null, 2)}`);
   }
 
   generateHtmlReport(data: { [key: string]: any }): string {
+    const reportTitle = `${this.translate("OTDR Report")} - ${data.sourceFile || this.translate("unknown")}`;
     let html = `
     <!DOCTYPE html>
-    <html lang="en">
+    <html lang="uk">
     <head>
       <meta charset="UTF-8">
-      <title>OTDR Report - ${data.sourceFile || "N/A"}</title>
+      <title>${reportTitle}</title>
       <style>
         body { font-family: sans-serif; margin: 20px; }
         h1, h2 { color: #333; text-align: center; }
@@ -673,13 +715,13 @@ ${JSON.stringify(payload, null, 2)}`);
       </style>
     </head>
     <body>
-      <button onclick="window.print()" class="print-btn">Save PDF</button>
+      <button onclick="window.print()" class="print-btn">${this.translate("Save PDF")}</button>
       <div class="report-container">
-        <h1>Report: ${data.sourceFile || "N/A"}</h1>
+        <h1>${this.translate("Report")}: ${data.sourceFile || this.translate("unknown")}</h1>
     `;
 
     if (data.chartImage) {
-      html += `<img src="${data.chartImage}" alt="OTDR Trace Chart">`;
+      html += `<img src="${data.chartImage}" alt="${this.translate("OTDR Trace Chart")}">`;
     }
 
     html += `<div class="report-data">`;
@@ -687,7 +729,7 @@ ${JSON.stringify(payload, null, 2)}`);
     // Add selected properties to the report
     if (data.properties) {
       for (const key in data.properties) {
-        html += `<div class="data-item"><span class="data-key" contenteditable="true">${key}:</span> <span class="data-value" contenteditable="true">${data.properties[key]}</span></div>`;
+        html += `<div class="data-item"><span class="data-key" contenteditable="true">${this.translate(key)}:</span> <span class="data-value" contenteditable="true">${data.properties[key]}</span></div>`;
       }
     }
 
@@ -695,7 +737,7 @@ ${JSON.stringify(payload, null, 2)}`);
     if (data.summary && data.summary.length > 0) {
         // Assuming summary is a single object or we only care about the first one for key-value pairs
         for (const key in data.summary[0]) {
-            html += `<div class="data-item"><span class="data-key" contenteditable="true">${key}:</span> <span class="data-value" contenteditable="true">${data.summary[0][key]}</span></div>`;
+            html += `<div class="data-item"><span class="data-key" contenteditable="true">${this.translate(key)}:</span> <span class="data-value" contenteditable="true">${data.summary[0][key]}</span></div>`;
         }
     }
 
@@ -703,7 +745,7 @@ ${JSON.stringify(payload, null, 2)}`);
     if (data.events && data.events.length > 0) {
         data.events.forEach((eventRow: { [key: string]: string }) => {
             for (const key in eventRow) {
-                html += `<div class="data-item"><span class="data-key" contenteditable="true">${key}:</span> <span class="data-value" contenteditable="true">${eventRow[key]}</span></div>`;
+                html += `<div class="data-item"><span class="data-key" contenteditable="true">${this.translate(key)}:</span> <span class="data-value" contenteditable="true">${eventRow[key]}</span></div>`;
             }
         });
     }
@@ -725,6 +767,18 @@ ${JSON.stringify(payload, null, 2)}`);
     const btnCreateFolder = document.getElementById("btnCreateFolder");
     const btnUploadFile = document.getElementById("btnUploadFile");
     const btnUploadToParser = document.getElementById("btnUploadToParser");
+    const fileUploadInput = document.getElementById('fileUpload') as HTMLInputElement;
+    const filesChosen = document.getElementById('files-chosen');
+
+    if (fileUploadInput) {
+        fileUploadInput.addEventListener('change', () => {
+            if (fileUploadInput.files && fileUploadInput.files.length > 0) {
+                if (filesChosen) filesChosen.textContent = `${fileUploadInput.files.length} files selected`;
+            } else {
+                if (filesChosen) filesChosen.textContent = "Не вибрано файлів";
+            }
+        });
+    }
 
     if(btn) {
         btn.onclick = () => {
@@ -759,12 +813,10 @@ ${JSON.stringify(payload, null, 2)}`);
 
     if(btnUploadFile) {
         btnUploadFile.onclick = async () => {
-            const fileUploadInput = document.getElementById('fileUpload') as HTMLInputElement;
             const files = fileUploadInput.files;
             if (files && files.length > 0) {
                 await this.uploadFiles(files, this.currentPath);
                 fileUploadInput.value = '';
-                this.loadFiles(); // Refresh file list
             }
         };
     }
@@ -781,7 +833,7 @@ ${JSON.stringify(payload, null, 2)}`);
               const modal = document.getElementById("fileManagerModal");
               if (modal) modal.style.display = "none";
           } else {
-              alert("Please select at least one file to parse.");
+              alert(this.translate("Please select at least one file to parse."));
           }
       };
   }
@@ -811,7 +863,7 @@ async parseFiles(files: string[]) {
         const data = await response.json();
         const fileManager = document.getElementById('fileManager');
         if (fileManager) {
-            let html = `<h2>Index of /${data.currentPath}</h2>`;
+            let html = `<h2>${this.translate("Index of")} /${data.currentPath}</h2>`;
             html += '<hr><pre>';
             if (data.currentPath !== '') {
                 html += `<a href="#" class="dir-up">../</a>\n`;
@@ -871,6 +923,14 @@ async parseFiles(files: string[]) {
   }
 
   async uploadFiles(files: FileList, path = '') {
+    const uploadProgressContainer = document.getElementById('uploadProgressContainer');
+    const uploadProgressBar = document.getElementById('uploadProgressBar') as HTMLProgressElement;
+    const uploadProgressText = document.getElementById('uploadProgressText');
+
+    if (uploadProgressContainer) uploadProgressContainer.style.display = 'block';
+    if (uploadProgressBar) uploadProgressBar.value = 0;
+    if (uploadProgressText) uploadProgressText.textContent = '0%';
+
     try {
         const formData = new FormData();
         formData.append('path', path);
@@ -878,12 +938,35 @@ async parseFiles(files: string[]) {
             formData.append('files', files[i]);
         }
 
-        await fetch('/api/upload', {
-            method: 'POST',
-            body: formData
-        });
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/upload', true);
+
+        xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+                const percentComplete = (event.loaded / event.total) * 100;
+                if (uploadProgressBar) uploadProgressBar.value = percentComplete;
+                if (uploadProgressText) uploadProgressText.textContent = `${Math.round(percentComplete)}%`;
+            }
+        };
+
+        xhr.onload = () => {
+            if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+            if (xhr.status === 200) {
+                this.loadFiles(this.currentPath);
+            } else {
+                console.error('Error uploading files:', xhr.statusText);
+            }
+        };
+
+        xhr.onerror = () => {
+            if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+            console.error('Error uploading files:', xhr.statusText);
+        };
+
+        xhr.send(formData);
     } catch (error) {
         console.error('Error uploading files:', error);
+        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
     }
   }
 }
