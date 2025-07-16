@@ -33,3 +33,14 @@
     text-decoration: none;
     cursor: pointer;
 }
+
+.custom-file-upload {
+    border: 1px solid #ccc;
+    display: inline-block;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+#file-chosen, #files-chosen {
+    margin-left: 10px;
+}

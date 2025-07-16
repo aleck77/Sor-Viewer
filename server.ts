@@ -9,7 +9,8 @@ const app = express();
 const port = 3000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 const publicDir = path.resolve(process.cwd(), 'public');
 
@@ -26,8 +27,15 @@ app.get('/api/files', (req, res) => {
         const fileData = files.map(file => ({
             name: file.name,
             isDirectory: file.isDirectory(),
-        }));
+        }))
+        .sort((a, b) => {
+            // Directories first
+            if (a.isDirectory && !b.isDirectory) return -1;
+            if (!a.isDirectory && b.isDirectory) return 1;
 
+            // Natural sort for names
+            return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+        });
         res.json({
             currentPath: relativePath,
             files: fileData
@@ -73,12 +81,32 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage: storage });
+app.post('/api/upload', (req, res) => {
+    const uploader = multer({ storage: storage }).array('files', 4000);
 
-app.post('/api/upload', upload.array('files', 4000), (req, res) => {
-    console.log(`Files upload request received for path: ${req.body.path}`);
-    console.log('Uploaded files details:', req.files);
-    res.status(200).send('Files uploaded successfully');
+    uploader(req, res, function (err) {
+        if (err instanceof multer.MulterError) {
+            console.error('Multer error:', err);
+            return res.status(500).json(err);
+        }
+        else if (err) {
+            console.error('Unknown error:', err);
+            return res.status(500).json(err);
+        }
+
+        console.log(`Files upload request received for path: ${req.body.path}`);
+        if (Array.isArray(req.files)) {
+            console.log(`Received ${req.files.length} files.`);
+            // Log details for each file
+            req.files.forEach(file => {
+                console.log(`- ${file.originalname} (${file.size} bytes)`);
+            });
+        } else {
+            console.log('No files received or req.files is not an array.');
+        }
+        
+        res.status(200).send('Files uploaded successfully');
+    });
 });
 
 

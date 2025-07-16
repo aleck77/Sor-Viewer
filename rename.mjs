@@ -12,7 +12,7 @@ fs.readdir(directoryPath, (err, files) => {
     return console.log('Unable to scan directory: ' + err);
   }
 
-  let i = 1;
+  let i = 300;
   files.forEach((file) => {
     if (file.includes('.sor')) {
       const oldPath = path.join(directoryPath, file);

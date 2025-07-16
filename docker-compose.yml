@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frontend:
     build:
@@ -14,6 +12,5 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    user: root
     volumes:
       - ./public:/app/public

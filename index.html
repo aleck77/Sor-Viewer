@@ -25,17 +25,19 @@
     <div class="grid-container">
       <div class="File-Select" id="File-Input">
         <form action="#" onsubmit="return false;">
-          <input type="file" id="fileinput" accept=".sor,.SOR" />
-          <input type="button" id="btnLoad" value="Load" />
-          <input type="button" id="btnBrowse" value="Browse Server" />
+          <input type="file" id="fileinput" accept=".sor,.SOR" style="display: none;" />
+          <label for="fileinput" class="custom-file-upload">Виберіть файл</label>
+          <span id="file-chosen">Файл не вибрано</span>
+          <input type="button" id="btnLoad" value="Завантажити" />
+          <input type="button" id="btnBrowse" value="Огляд серій" />
         </form>
         <div class="Send-Controls" id="send-controls"></div>
         <div class="Templates-Section" style="margin-top: 20px; border-top: 2px solid #ccc; padding-top: 15px;">
-          <h3>Templates</h3>
+          <h3>Шаблони</h3>
           <div id="template-controls">
-            <input type="text" id="template-name-input" placeholder="Template name">
-            <button id="save-template-btn">Save as Template</button>
-            <button id="clear-selections-btn">Clear</button>
+            <input type="text" id="template-name-input" placeholder="Назва щаблону">
+            <button id="save-template-btn">Зберегти шаблон</button>
+            <button id="clear-selections-btn">Очистити</button>
           </div>
           <div id="templates-list" style="margin-top: 10px;"></div>
         </div>
@@ -49,21 +51,28 @@
       <div class="Events" id="event-sum"></div>
     </div>
     <div id="footer">
-      <a href="mailto:aleck541977@gmail.com"> Alex </a>2022
+      <a href="mailto:aleck541977@gmail.com"> Зв'яжіться з нами </a>2022
     </div>
 
     <div id="fileManagerModal" class="modal">
       <div class="modal-content">
         <span class="close">&times;</span>
-        <h2>File Manager</h2>
+        <h2>Файловий менеджер</h2>
         <div id="fileManagerControls">
-          <input type="text" id="newFolderName" placeholder="New folder name" />
-          <button id="btnCreateFolder">Create Folder</button>
-          <input type="file" id="fileUpload" multiple/>
-          <button id="btnUploadFile">Upload</button>
-          <button id="btnUploadToParser">Upload to Parser</button>
+          <input type="text" id="newFolderName" placeholder="Ім'я нової папки" />
+          <button id="btnCreateFolder">Створити папку</button>
+          <input type="file" id="fileUpload" multiple style="display: none;"/>
+          <label for="fileUpload" class="custom-file-upload">Виберіть файли</label>
+          <span id="files-chosen">Не вибрано файлів</span>
+          <button id="btnUploadFile">Вивантажити</button>
+          <button id="btnUploadToParser">Огляд серій</button>
         </div>
         <div id="fileManager"></div>
+        <div id="uploadProgressContainer" style="display: none;">
+          <p>Uploading files...</p>
+          <progress id="uploadProgressBar" value="0" max="100"></progress>
+          <span id="uploadProgressText"></span>
+        </div>
       </div>
     </div>
 
