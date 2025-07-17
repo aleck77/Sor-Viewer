@@ -4,6 +4,7 @@ import multer from 'multer';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
+import archiver from 'archiver';
 
 const app = express();
 const port = 3000;
@@ -109,6 +110,34 @@ app.post('/api/upload', (req, res) => {
     });
 });
 
+// API to download files and folders as a zip
+app.get('/api/download', (req, res) => {
+    const paths = req.query.paths ? JSON.parse(req.query.paths as string) : [];
+    if (!paths || paths.length === 0) {
+        return res.status(400).send('No files or folders specified for download.');
+    }
+
+    const archive = archiver('zip', {
+        zlib: { level: 9 } // Sets the compression level.
+    });
+
+    res.attachment('download.zip');
+    archive.pipe(res);
+
+    paths.forEach((relativePath: string) => {
+        const fullPath = path.join(publicDir, relativePath);
+        if (fs.existsSync(fullPath)) {
+            const stat = fs.statSync(fullPath);
+            if (stat.isDirectory()) {
+                archive.directory(fullPath, relativePath);
+            } else {
+                archive.file(fullPath, { name: path.basename(fullPath) });
+            }
+        }
+    });
+
+    archive.finalize();
+});
 
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);

@@ -50,6 +50,7 @@ export class Gui {
       "An error occurred while sending data": "Під час надсилання даних сталася помилка",
       "Index of": "Вміст теки",
       "Please select at least one file to parse.": "Будь ласка, виберіть хоча б один файл для аналізу.",
+      "Please select at least one file to download.": "Будь ласка, виберіть хоча б один файл для завантаження.",
     };
     this.initializeFileManager();
     this.createDefaultTemplates();
@@ -779,6 +780,7 @@ ${JSON.stringify(payload, null, 2)}`);
     const btnCreateFolder = document.getElementById("btnCreateFolder");
     const btnUploadFile = document.getElementById("btnUploadFile");
     const btnUploadToParser = document.getElementById("btnUploadToParser");
+    const btnDownloadSelected = document.getElementById("btnDownloadSelected");
     const fileUploadInput = document.getElementById('fileUpload') as HTMLInputElement;
     const filesChosen = document.getElementById('files-chosen');
 
@@ -848,26 +850,43 @@ ${JSON.stringify(payload, null, 2)}`);
               alert(this.translate("Please select at least one file to parse."));
           }
       };
-  }
-}
+    }
 
-async parseFiles(files: string[]) {
-  this.clearDivs();
-  for (const filePath of files) {
-    try {
-      const timestamp = new Date().getTime();
-      const response = await fetch(`/public/${filePath}?t=${timestamp}`);
-      const arrayBuffer = await response.arrayBuffer();
-      const filename = filePath.split("/").pop()!;
-      const config = { browserMode: true };
-      const sor = new SorReader(undefined, config, arrayBuffer);
-      const data = await sor.parse();
-      this.showResults(data, filename);
-    } catch (error) {
-      console.error(`Error parsing file ${filePath}:`, error);
+    if (btnDownloadSelected) {
+      btnDownloadSelected.onclick = () => {
+        const checkboxes = document.querySelectorAll<HTMLInputElement>('.file-checkbox:checked');
+        const filesToDownload: string[] = [];
+        checkboxes.forEach(checkbox => {
+          filesToDownload.push(checkbox.dataset.path!);
+        });
+
+        if (filesToDownload.length > 0) {
+          const query = encodeURIComponent(JSON.stringify(filesToDownload));
+          window.location.href = `/api/download?paths=${query}`;
+        } else {
+          alert(this.translate('Please select at least one file to download.'));
+        }
+      };
     }
   }
-}
+
+  async parseFiles(files: string[]) {
+    this.clearDivs();
+    for (const filePath of files) {
+      try {
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/public/${filePath}?t=${timestamp}`);
+        const arrayBuffer = await response.arrayBuffer();
+        const filename = filePath.split("/").pop()!;
+        const config = { browserMode: true };
+        const sor = new SorReader(undefined, config, arrayBuffer);
+        const data = await sor.parse();
+        this.showResults(data, filename);
+      } catch (error) {
+        console.error(`Error parsing file ${filePath}:`, error);
+      }
+    }
+  }
 
   async loadFiles(path = '') {
     this.currentPath = path;
@@ -878,6 +897,7 @@ async parseFiles(files: string[]) {
         if (fileManager) {
             let html = `<h2>${this.translate("Index of")} /${data.currentPath}</h2>`;
             html += '<hr><pre>';
+            html += `<div><input type="checkbox" id="selectAllFiles" style="margin-right: 5px;"><label for="selectAllFiles">Select All</label></div>`;
             if (data.currentPath !== '') {
                 html += `<a href="#" class="dir-up">../</a>\n`;
             }
@@ -885,14 +905,34 @@ async parseFiles(files: string[]) {
                 const fullPath = data.currentPath ? `${data.currentPath}/${file.name}` : file.name;
                 const linkClass = file.isDirectory ? 'dir' : 'file';
                 const linkText = file.isDirectory ? `${file.name}/` : file.name;
-                if (file.isDirectory) {
-                    html += `<a href="#" class="${linkClass}" data-path="${fullPath}">${linkText}</a>\n`;
-                } else {
-                    html += `<input type="checkbox" class="file-checkbox" data-path="${fullPath}" style="margin-right: 5px;"><a href="#" class="${linkClass}" data-path="${fullPath}">${linkText}</a>\n`;
-                }
+                html += `<div><input type="checkbox" class="file-checkbox" data-path="${fullPath}" style="margin-right: 5px;"><a href="#" class="${linkClass}" data-path="${fullPath}">${linkText}</a></div>`;
             });
             html += '</pre><hr>';
             fileManager.innerHTML = html;
+
+            const selectAllCheckbox = document.getElementById('selectAllFiles') as HTMLInputElement;
+            const fileCheckboxes = fileManager.querySelectorAll<HTMLInputElement>('.file-checkbox');
+            let lastChecked: HTMLInputElement | null = null;
+
+            selectAllCheckbox.addEventListener('change', () => {
+                fileCheckboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+            });
+
+            fileCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('click', (event) => {
+                    if (event.shiftKey && lastChecked) {
+                        const checkboxes = Array.from(fileCheckboxes);
+                        const start = checkboxes.indexOf(lastChecked);
+                        const end = checkboxes.indexOf(checkbox);
+                        checkboxes.slice(Math.min(start, end), Math.max(start, end) + 1).forEach(cb => {
+                            cb.checked = lastChecked!.checked;
+                        });
+                    }
+                    lastChecked = checkbox;
+                });
+            });
 
             // Add event listeners
             fileManager.querySelectorAll('a').forEach(item => {
